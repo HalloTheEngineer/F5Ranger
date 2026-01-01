@@ -1,4 +1,3 @@
-# Build and Release F5Ranger - A Fabric mod to tweak the third-person camera distance
 name: Build and Release F5Ranger
 
 on:
@@ -14,15 +13,20 @@ jobs:
     permissions:
       contents: read
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      artifact-path: ${{ steps.build.outputs.artifact-path }}
+      version: ${{ steps.get_version.outputs.version }}
     env:
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch full history for proper versioning
+
+      - name: Extract version from fabric.mod.json
+        id: get_version
+        run: |
+          # Use jq to pull the version string from the json file
+          VERSION=$(jq -r '.version' src/main/resources/fabric.mod.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected version: $VERSION"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -31,62 +35,16 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4 # v4.0.0
-        with:
-          cache-cleanup: on-success
-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v3
-
-      - name: Generate version number
-        id: version
-        run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            # If this is a tag, use the tag name as version
-            VERSION=${GITHUB_REF#refs/tags/}
-          else
-            # Generate version based on commit count and short SHA for F5Ranger
-            COMMIT_COUNT=$(git rev-list --count HEAD)
-            SHORT_SHA=$(git rev-parse --short HEAD)
-            VERSION="1.0.$COMMIT_COUNT-$SHORT_SHA"
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Generated version for F5Ranger: $VERSION"
-
-      - name: Update mod version
-        run: |
-          # Update version in gradle.properties if it exists
-          if [ -f gradle.properties ]; then
-            sed -i "s/mod_version=.*/mod_version=${{ steps.version.outputs.version }}/" gradle.properties
-          fi
-          # You can also update fabric.mod.json if needed
-          if [ -f src/main/resources/fabric.mod.json ]; then
-            sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.version.outputs.version }}\"/" src/main/resources/fabric.mod.json
-          fi
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
-        id: build
-        run: |
-          ./gradlew remapJar --no-daemon --stacktrace --info
-          # Find the built jar file
-          JAR_FILE=$(find build/libs -name "*.jar" -not -name "*-sources.jar" -not -name "*-dev.jar" | head -1)
-          if [ -z "$JAR_FILE" ]; then
-            echo "Error: No jar file found in build/libs"
-            ls -la build/libs/ || echo "build/libs directory not found"
-            exit 1
-          fi
-          echo "artifact-path=$JAR_FILE" >> $GITHUB_OUTPUT
-          echo "Built artifact: $JAR_FILE"
+        run: ./gradlew remapJar --no-daemon
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: f5ranger-${{ steps.version.outputs.version }}
+          name: f5ranger-build
           path: build/libs/*.jar
-          if-no-files-found: error
 
   release:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
@@ -101,52 +59,25 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: f5ranger-${{ needs.build.outputs.version }}
+          name: f5ranger-build
           path: ./artifacts
 
       - name: Read mod info
         id: mod-info
         run: |
-          # Extract mod name and description from fabric.mod.json
-          if [ -f src/main/resources/fabric.mod.json ]; then
-            MOD_NAME=$(grep -o '"name": "[^"]*' src/main/resources/fabric.mod.json | cut -d'"' -f4)
-            MOD_DESC=$(grep -o '"description": "[^"]*' src/main/resources/fabric.mod.json | cut -d'"' -f4)
-            echo "mod-name=$MOD_NAME" >> $GITHUB_OUTPUT
-            echo "mod-description=$MOD_DESC" >> $GITHUB_OUTPUT
-          else
-            echo "mod-name=F5Ranger" >> $GITHUB_OUTPUT
-            echo "mod-description=A Fabric mod to tweak the third-person camera distance" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          # Generate a simple changelog from recent commits
-          echo "## Changes" > CHANGELOG.md
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            # For tagged releases, get commits since last tag
-            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-            if [ -n "$LAST_TAG" ]; then
-              git log --pretty=format:"- %s" $LAST_TAG..HEAD >> CHANGELOG.md
-            else
-              git log --pretty=format:"- %s" -10 >> CHANGELOG.md
-            fi
-          else
-            # For main branch, get last 10 commits
-            git log --pretty=format:"- %s" -10 >> CHANGELOG.md
-          fi
-          echo "" >> CHANGELOG.md
-          echo "Built from commit: ${{ github.sha }}" >> CHANGELOG.md
+          MOD_NAME=$(jq -r '.name' src/main/resources/fabric.mod.json)
+          echo "mod-name=$MOD_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.build.outputs.version) }}
+          # Use the version extracted in the build job for the tag
+          tag_name: v${{ needs.build.outputs.version }}
           name: ${{ steps.mod-info.outputs.mod-name }} ${{ needs.build.outputs.version }}
-          body_path: CHANGELOG.md
           files: ./artifacts/*.jar
           draft: false
-          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          # Explicitly set to false to ensure non-pre-release
+          prerelease: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,30 @@
+{
+  "key.category.minecraft.f5ranger": "F5 Distance | F5 Ranger",
+  "key.f5ranger.modifier": "Camera Distance Modifier",
+  "text.f5ranger.settings_button": "F5 Ranger Settings",
+  "text.autoconfig.f5ranger.title": "F5 Ranger Configuration",
+
+  "text.autoconfig.f5ranger.option.cameraDistance": "Camera Distance",
+  "text.autoconfig.f5ranger.option.cameraDistance.@Tooltip": "The target distance for the third-person camera.",
+
+  "text.autoconfig.f5ranger.option.minDistance": "Minimum Distance",
+  "text.autoconfig.f5ranger.option.minDistance.@Tooltip": "The closest the camera can get to the player.",
+
+  "text.autoconfig.f5ranger.option.maxDistance": "Maximum Distance",
+  "text.autoconfig.f5ranger.option.maxDistance.@Tooltip": "The furthest the camera can zoom out.",
+
+  "text.autoconfig.f5ranger.option.scrollStep": "Scroll Sensitivity",
+  "text.autoconfig.f5ranger.option.scrollStep.@Tooltip": "How much the distance changes per scroll click.",
+
+  "text.autoconfig.f5ranger.option.lerpSpeed": "Smoothing Speed",
+  "text.autoconfig.f5ranger.option.lerpSpeed.@Tooltip": "How fast the camera catches up to the target distance (Lower is smoother).",
+
+  "text.autoconfig.f5ranger.option.smoothCamera": "Enable Smoothing",
+  "text.autoconfig.f5ranger.option.smoothCamera.@Tooltip": "Whether the camera should slide smoothly between distances.",
+
+  "text.autoconfig.f5ranger.option.noClip": "No Clip",
+  "text.autoconfig.f5ranger.option.noClip.@Tooltip": "If enabled, the camera will pass through blocks instead of colliding with them.",
+
+  "text.autoconfig.f5ranger.option.disableSecondPerson": "Vanilla Second Person",
+  "text.autoconfig.f5ranger.option.disableSecondPerson.@Tooltip": "If enabled, the custom distance logic will NOT apply to the front-facing (Second Person) view."
+}

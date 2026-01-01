@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "f5ranger",
+  "version": "${version}",
+  "name": "F5Ranger",
+  "description": "Tweak the third-person camera distance with ease!",
+  "authors": [ "HalloTheEngineer" ],
+  "contact": {
+    "homepage": "https://github.com/HalloTheEngineer/F5Ranger",
+    "issues": "https://github.com/HalloTheEngineer/F5Ranger/issues",
+    "sources": "https://github.com/HalloTheEngineer/F5Ranger"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/f5ranger/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [ "de.hallotheengineer.f5ranger.F5RangerClient" ],
+    "modmenu": ["de.hallotheengineer.f5ranger.integration.ModMenuIntegration"]
+  },
+  "mixins": [
+    "f5ranger.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "cloth-config": ">=${cloth_config_version}"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

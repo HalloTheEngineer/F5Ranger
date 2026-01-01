@@ -21,7 +21,7 @@
     "f5ranger.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=${loader_version}",
+    "fabricloader": ">=${major_loader_version}",
     "fabric-api": "*",
     "minecraft": "${minecraft_version}",
     "cloth-config": ">=${cloth_config_version}"

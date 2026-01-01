@@ -8,35 +8,44 @@ on:
 
 jobs:
   build:
+    name: Build Mod
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed to check tags/releases
+      contents: read
     outputs:
       version: ${{ steps.get_version.outputs.version }}
-      exists: ${{ steps.check_tag.outputs.exists }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all history for changelog and tags
+      mod_name: ${{ steps.get_version.outputs.mod_name }}
+      exists: ${{ steps.check_release.outputs.exists }}
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
 
-      - name: Extract version
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Metadata
         id: get_version
         run: |
-          VERSION=$(jq -r '.version' src/main/resources/fabric.mod.json)
+          # Since fabric.mod.json uses ${version}, we pull the real version from gradle.properties
+          VERSION=$(grep "mod_version" gradle.properties | cut -d'=' -f2 | xargs)
+          # We can still get the Name from fabric.mod.json as that is hardcoded
+          NAME=$(jq -r '.name' src/main/resources/fabric.mod.json)
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "mod_name=$NAME" >> $GITHUB_OUTPUT
+          echo "Detected $NAME version: $VERSION"
 
-      - name: Check if release exists
-        id: check_tag
+      - name: Check if Release Already Exists
+        id: check_release
         run: |
-          if gh release view v${{ steps.get_version.outputs.version }} >/dev/null 2>&1; then
-            echo "Release v${{ steps.get_version.outputs.version }} already exists. Skipping release."
+          if git rev-parse "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "Version v${{ steps.get_version.outputs.version }} already released. Skipping release job."
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -44,17 +53,24 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build with Gradle
-        run: ./gradlew remapJar --no-daemon
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Upload build artifacts
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          # Gradle will automatically replace ${version} in fabric.mod.json during the processResources task
+          ./gradlew remapJar --no-daemon
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: f5ranger-build
           path: build/libs/*.jar
+          if-no-files-found: error
 
   release:
-    # Only run if on main AND the version doesn't exist yet
+    name: Create GitHub Release
     if: github.ref == 'refs/heads/main' && needs.build.outputs.exists == 'false'
     needs: build
     runs-on: ubuntu-latest
@@ -62,24 +78,25 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Download build artifacts
+      - name: Download Build Artifacts
         uses: actions/download-artifact@v4
         with:
           name: f5ranger-build
           path: ./artifacts
 
-      - name: Create Release
+      - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.build.outputs.version }}
-          name: F5Ranger ${{ needs.build.outputs.version }}
+          name: ${{ needs.build.outputs.mod_name }} ${{ needs.build.outputs.version }}
           files: ./artifacts/*.jar
           draft: false
           prerelease: false
-          generate_release_notes: true # This automatically bundles all "stashed" commits into the notes
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ F5 Ranger is a client-side Fabric mod for Minecraft that allows players to smoot
 
 It is designed to be unobtrusive and highly configurable, making it ideal for builders, content creators, and players who want better control over their perspective.
 
-![](https://github.com/HalloTheEngineer/F5Ranger/showcase.mp4)
+![](https://github.com/HalloTheEngineer/F5Ranger/raw/refs/heads/main/media/showcase.mp4)
 
 ## Features
 

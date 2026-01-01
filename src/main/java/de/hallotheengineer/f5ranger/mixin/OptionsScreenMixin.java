@@ -26,6 +26,8 @@ public abstract class OptionsScreenMixin extends Screen {
             locals = LocalCapture.CAPTURE_FAILSOFT
     )
     private void addCameraSlider(CallbackInfo ci, DirectionalLayoutWidget directionalLayoutWidget, DirectionalLayoutWidget directionalLayoutWidget2, GridWidget gridWidget, GridWidget.Adder adder) {
+        if (!F5RangerClient.config.showUISlider) return;
+
         SliderWidget slider = new SliderWidget(
                 0, 0,
                 150, 20,

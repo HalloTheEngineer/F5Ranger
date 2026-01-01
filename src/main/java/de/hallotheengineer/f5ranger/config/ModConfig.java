@@ -29,4 +29,7 @@ public class ModConfig implements ConfigData {
 
     @ConfigEntry.Gui.Tooltip
     public boolean disableSecondPerson = false;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean showUISlider = true;
 }

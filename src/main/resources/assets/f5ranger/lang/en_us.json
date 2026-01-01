@@ -26,5 +26,8 @@
   "text.autoconfig.f5ranger.option.noClip.@Tooltip": "If enabled, the camera will pass through blocks instead of colliding with them.",
 
   "text.autoconfig.f5ranger.option.disableSecondPerson": "Vanilla Second Person",
-  "text.autoconfig.f5ranger.option.disableSecondPerson.@Tooltip": "If enabled, the custom distance logic will NOT apply to the front-facing (Second Person) view."
+  "text.autoconfig.f5ranger.option.disableSecondPerson.@Tooltip": "If enabled, the custom distance logic will NOT apply to the front-facing (Second Person) view.",
+
+  "text.autoconfig.f5ranger.option.showUISlider": "Show Distance Slider",
+  "text.autoconfig.f5ranger.option.showUISlider.@Tooltip": "If enabled, a slider to set the camera distance is added to the vanilla settings screen."
 }

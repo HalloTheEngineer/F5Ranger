@@ -4,6 +4,8 @@ F5 Ranger is a client-side Fabric mod for Minecraft that allows players to smoot
 
 It is designed to be unobtrusive and highly configurable, making it ideal for builders, content creators, and players who want better control over their perspective.
 
+![](https://github.com/HalloTheEngineer/F5Ranger/showcase.mp4)
+
 ## Features
 
 ### Smooth Distance Adjustment
@@ -44,7 +46,7 @@ It is designed to be unobtrusive and highly configurable, making it ideal for bu
 
 The following options are available via the configuration menu:
 
-|                          |                                                                                        |
+| Option                   | Description                                                                            |
 |--------------------------|----------------------------------------------------------------------------------------|
 | Camera Distance          | The current target distance of the third-person camera.                                |
 | Minimum/Maximum Distance | Limits for how close or far the camera can go.                                         |

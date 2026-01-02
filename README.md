@@ -32,7 +32,7 @@ It is designed to be unobtrusive and highly configurable, making it ideal for bu
 
 ## Installation
 
-1. Ensure you are using Fabric Loader for Minecraft 1.21.1.
+1. Ensure you are using Fabric Loader for the corresponding Minecraft version.
 
 2. Download the latest version of F5 Ranger and [Cloth Config](https://modrinth.com/mod/cloth-config) from Modrinth.
 

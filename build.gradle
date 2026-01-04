@@ -13,21 +13,19 @@ base {
 
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
-    projectId = "f5ranger" // This is your project slug or ID
+    projectId = "f5-ranger"
     versionNumber = project.mod_version
     versionName = "F5Ranger ${project.mod_version}"
     versionType = "release"
     uploadFile = remapJar
-    gameVersions = [project.minecraft_version] // Uses the version from gradle.properties
+    gameVersions = [project.minecraft_version]
     loaders = ["fabric"]
 
-    // Check if changelog was passed via command line
     if (project.hasProperty("changelog")) {
         changelog = project.getProperty("changelog")
     }
 
     dependencies {
-        // Automatically adds dependencies if they exist on Modrinth
         required.project "fabric-api"
         required.project "cloth-config"
         optional.project "modmenu"

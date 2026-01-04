@@ -50,7 +50,7 @@ public abstract class OptionsScreenMixin extends Screen {
             }
         };
 
-        this.addDrawableChild(slider);
+        this.addButton(slider);
     }
 
     @Unique

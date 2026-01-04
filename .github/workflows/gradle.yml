@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - "main"
-      - "[0-9]+.[0-9]+*" # Matches version branches like 1.19.4 or 1.21.x
+      - "[0-9]+.[0-9]+*" # Matches version branches like 1.18.2, 1.19.4, 1.21.x
   pull_request:
     branches:
       - "main"
@@ -64,13 +64,13 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: f5ranger-build-${{ github.ref_name }}
+          name: f5ranger-${{ github.ref_name }}
           path: build/libs/*.jar
           if-no-files-found: error
 
   release:
     name: Create GitHub Release
-    if: github.ref == 'refs/heads/main' && needs.build.outputs.exists == 'false'
+    if: (github.ref == 'refs/heads/main' || contains(github.ref, '.')) && needs.build.outputs.exists == 'false'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -85,7 +85,7 @@ jobs:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: f5ranger-build-${{ github.ref_name }}
+          name: f5ranger-${{ github.ref_name }}
           path: ./artifacts
 
       - name: Publish Release
@@ -102,7 +102,7 @@ jobs:
 
   publish-modrinth:
     name: Publish to Modrinth
-    if: github.ref == 'refs/heads/main' && needs.build.outputs.exists == 'false'
+    if: (github.ref == 'refs/heads/main' || contains(github.ref, '.')) && needs.build.outputs.exists == 'false'
     needs: build
     runs-on: ubuntu-latest
     steps:

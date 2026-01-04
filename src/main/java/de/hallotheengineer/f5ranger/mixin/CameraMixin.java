@@ -45,7 +45,7 @@ public abstract class CameraMixin {
                 currentVisualDistance = targetDistance;
             }
 
-            float scale = (this.focusedEntity instanceof LivingEntity living) ? living.getScale() : 1.0F;
+            float scale = (this.focusedEntity instanceof LivingEntity living) ? living.getScaleFactor() : 1.0F;
             float finalDistance = currentVisualDistance * scale;
 
             double appliedDistance = F5RangerClient.config.noClip ? finalDistance : this.clipToSpace(finalDistance);

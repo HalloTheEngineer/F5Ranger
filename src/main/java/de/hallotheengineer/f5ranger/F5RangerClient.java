@@ -8,7 +8,6 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class F5RangerClient implements ClientModInitializer {
@@ -18,7 +17,6 @@ public class F5RangerClient implements ClientModInitializer {
     private static final float DEFAULT_VANILLA_DISTANCE = 4.0f;
 
     public static KeyBinding modifierKey;
-    public static KeyBinding.Category keyCategory = KeyBinding.Category.create(Identifier.of(MOD_ID));
 
     @Override
     public void onInitializeClient() {
@@ -26,7 +24,7 @@ public class F5RangerClient implements ClientModInitializer {
                 "key.f5ranger.modifier",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_LEFT_ALT,
-                keyCategory
+                "key.category.minecraft." + MOD_ID
         ));
 
         AutoConfig.register(ModConfig.class, GsonConfigSerializer::new);

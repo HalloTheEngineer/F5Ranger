@@ -3,10 +3,10 @@ package de.hallotheengineer.f5ranger.mixin;
 import de.hallotheengineer.f5ranger.F5RangerClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
-import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
 import net.minecraft.client.gui.widget.GridWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,10 +22,13 @@ public abstract class OptionsScreenMixin extends Screen {
 
     @Inject(
             method = "init",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/ThreePartsLayoutWidget;addBody(Lnet/minecraft/client/gui/widget/Widget;)Lnet/minecraft/client/gui/widget/Widget;"),
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/widget/ButtonWidget;builder(Lnet/minecraft/text/Text;Lnet/minecraft/client/gui/widget/ButtonWidget$PressAction;)Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;"
+            ),
             locals = LocalCapture.CAPTURE_FAILSOFT
     )
-    private void addCameraSlider(CallbackInfo ci, DirectionalLayoutWidget directionalLayoutWidget, DirectionalLayoutWidget directionalLayoutWidget2, GridWidget gridWidget, GridWidget.Adder adder) {
+    private void addCameraSlider(CallbackInfo ci, GridWidget gridWidget, GridWidget.Adder adder) {
         if (!F5RangerClient.config.showUISlider) return;
 
         SliderWidget slider = new SliderWidget(
@@ -47,7 +50,7 @@ public abstract class OptionsScreenMixin extends Screen {
             }
         };
 
-        adder.add(slider, 2, gridWidget.copyPositioner().marginTop(4).alignHorizontalCenter());
+        adder.add(slider, 2, adder.copyPositioner().marginTop(4).alignHorizontalCenter());
     }
 
     @Unique
@@ -59,6 +62,6 @@ public abstract class OptionsScreenMixin extends Screen {
     private double getSliderValue() {
         float min = F5RangerClient.config.minDistance;
         float max = F5RangerClient.config.maxDistance;
-        return Math.clamp((F5RangerClient.config.cameraDistance - min) / (max - min), 0.0f, 1.0f);
+        return MathHelper.clamp((F5RangerClient.config.cameraDistance - min) / (max - min), 0.0, 1.0);
     }
 }

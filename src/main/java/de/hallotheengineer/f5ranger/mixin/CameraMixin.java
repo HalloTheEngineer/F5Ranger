@@ -5,7 +5,7 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Camera.class)
 public abstract class CameraMixin {
-    @Shadow protected abstract void moveBy(float surge, float heave, float sway);
-    @Shadow protected abstract float clipToSpace(float f);
+    @Shadow protected abstract void moveBy(double surge, double heave, double sway);
+    @Shadow protected abstract double clipToSpace(double f);
     @Shadow private boolean thirdPerson;
     @Shadow private Entity focusedEntity;
 
@@ -25,12 +25,12 @@ public abstract class CameraMixin {
     @Unique private boolean capturedInverseView;
 
     @Inject(method = "update", at = @At("HEAD"))
-    private void captureUpdateParams(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
+    private void captureUpdateParams(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
         this.capturedInverseView = inverseView;
     }
 
-    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;moveBy(FFF)V"))
-    private void redirectMoveBy(Camera instance, float surge, float heave, float sway) {
+    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;moveBy(DDD)V"))
+    private void redirectMoveBy(Camera instance, double surge, double heave, double sway) {
         if (this.thirdPerson) {
             if (this.capturedInverseView && F5RangerClient.config.disableSecondPerson) {
                 this.moveBy(surge, heave, sway);
@@ -45,10 +45,10 @@ public abstract class CameraMixin {
                 currentVisualDistance = targetDistance;
             }
 
-            float scale = (this.focusedEntity instanceof LivingEntity living) ? living.getScale() : 1.0F;
+            float scale = (this.focusedEntity instanceof LivingEntity living) ? living.getScaleFactor() : 1.0F;
             float finalDistance = currentVisualDistance * scale;
 
-            float appliedDistance = F5RangerClient.config.noClip ? finalDistance : this.clipToSpace(finalDistance);
+            double appliedDistance = F5RangerClient.config.noClip ? finalDistance : this.clipToSpace(finalDistance);
 
             this.moveBy(-appliedDistance, 0.0F, 0.0F);
         } else {

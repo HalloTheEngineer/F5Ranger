@@ -3,16 +3,15 @@ package de.hallotheengineer.f5ranger.mixin;
 import de.hallotheengineer.f5ranger.F5RangerClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
-import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
-import net.minecraft.client.gui.widget.GridWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(OptionsScreen.class)
 public abstract class OptionsScreenMixin extends Screen {
@@ -22,15 +21,19 @@ public abstract class OptionsScreenMixin extends Screen {
 
     @Inject(
             method = "init",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/ThreePartsLayoutWidget;addBody(Lnet/minecraft/client/gui/widget/Widget;)Lnet/minecraft/client/gui/widget/Widget;"),
-            locals = LocalCapture.CAPTURE_FAILSOFT
+            at = @At("TAIL")
     )
-    private void addCameraSlider(CallbackInfo ci, DirectionalLayoutWidget directionalLayoutWidget, DirectionalLayoutWidget directionalLayoutWidget2, GridWidget gridWidget, GridWidget.Adder adder) {
+    private void addCameraSlider(CallbackInfo ci) {
         if (!F5RangerClient.config.showUISlider) return;
 
+        int buttonWidth = 150;
+        int x = this.width / 2 - (buttonWidth / 2);
+
+        int y = this.height / 6 + 144;
+
         SliderWidget slider = new SliderWidget(
-                0, 0,
-                150, 20,
+                x, y,
+                buttonWidth, 20,
                 getSliderMessage(),
                 getSliderValue()) {
 
@@ -47,18 +50,18 @@ public abstract class OptionsScreenMixin extends Screen {
             }
         };
 
-        adder.add(slider, 2, gridWidget.copyPositioner().marginTop(4).alignHorizontalCenter());
+        this.addDrawableChild(slider);
     }
 
     @Unique
     private Text getSliderMessage() {
-        return Text.literal("Camera Distance: " + String.format("%.1f", F5RangerClient.config.cameraDistance));
+        return new LiteralText("Camera Distance: " + String.format("%.1f", F5RangerClient.config.cameraDistance));
     }
 
     @Unique
     private double getSliderValue() {
         float min = F5RangerClient.config.minDistance;
         float max = F5RangerClient.config.maxDistance;
-        return Math.clamp((F5RangerClient.config.cameraDistance - min) / (max - min), 0.0f, 1.0f);
+        return MathHelper.clamp((F5RangerClient.config.cameraDistance - min) / (max - min), 0.0, 1.0);
     }
 }

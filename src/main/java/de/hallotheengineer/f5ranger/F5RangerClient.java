@@ -30,9 +30,8 @@ public class F5RangerClient implements ClientModInitializer {
         AutoConfig.register(ModConfig.class, GsonConfigSerializer::new);
         config = AutoConfig.getConfigHolder(ModConfig.class).getConfig();
 
-        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
-            AutoConfig.getConfigHolder(ModConfig.class).save();
-        });
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client ->
+                AutoConfig.getConfigHolder(ModConfig.class).save());
     }
 
     public static void adjustDistance(double verticalAmount) {

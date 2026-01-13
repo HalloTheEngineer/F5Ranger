@@ -12,9 +12,10 @@
   },
   "license": "All-Rights-Reserved",
   "icon": "assets/f5ranger/icon.png",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
     "client": [ "de.hallotheengineer.f5ranger.F5RangerClient" ],
+    "server": [ "de.hallotheengineer.f5ranger.F5RangerServer" ],
     "modmenu": ["de.hallotheengineer.f5ranger.integration.ModMenuIntegration"]
   },
   "mixins": [

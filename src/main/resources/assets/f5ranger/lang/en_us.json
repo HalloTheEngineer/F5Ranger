@@ -23,7 +23,7 @@
   "text.autoconfig.f5ranger.option.smoothCamera.@Tooltip": "Whether the camera should slide smoothly between distances.",
 
   "text.autoconfig.f5ranger.option.noClip": "No Clip",
-  "text.autoconfig.f5ranger.option.noClip.@Tooltip": "If enabled, the camera will pass through blocks instead of colliding with them.",
+  "text.autoconfig.f5ranger.option.noClip.@Tooltip": "[Required On Server] If enabled, the camera will pass through blocks instead of colliding with them.",
 
   "text.autoconfig.f5ranger.option.disableSecondPerson": "Vanilla Second Person",
   "text.autoconfig.f5ranger.option.disableSecondPerson.@Tooltip": "If enabled, the custom distance logic will NOT apply to the front-facing (Second Person) view.",

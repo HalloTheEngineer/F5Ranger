@@ -59,7 +59,7 @@ jobs:
       - name: Build with Gradle
         run: |
           chmod +x ./gradlew
-          ./gradlew remapJar --no-daemon
+          ./gradlew jar --no-daemon
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4

@@ -1,34 +1,40 @@
 package de.hallotheengineer.f5ranger.mixin;
 
 import de.hallotheengineer.f5ranger.F5RangerClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.option.OptionsScreen;
-import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
-import net.minecraft.client.gui.widget.GridWidget;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.OptionsScreen;
+import net.minecraft.network.chat.Component;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(OptionsScreen.class)
 public abstract class OptionsScreenMixin extends Screen {
-    protected OptionsScreenMixin(Text title) {
+    protected OptionsScreenMixin(Component title) {
         super(title);
     }
 
+    @Shadow
+    @Final
+    private HeaderAndFooterLayout layout;
+
     @Inject(
             method = "init",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/ThreePartsLayoutWidget;addBody(Lnet/minecraft/client/gui/widget/Widget;)Lnet/minecraft/client/gui/widget/Widget;"),
-            locals = LocalCapture.CAPTURE_FAILSOFT
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/layouts/HeaderAndFooterLayout;addToFooter(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;"
+            )
     )
-    private void addCameraSlider(CallbackInfo ci, DirectionalLayoutWidget directionalLayoutWidget, DirectionalLayoutWidget directionalLayoutWidget2, GridWidget gridWidget, GridWidget.Adder adder) {
+    private void addCameraSlider(CallbackInfo ci) {
         if (!F5RangerClient.config.showUISlider) return;
 
-        SliderWidget slider = new SliderWidget(
+        AbstractSliderButton slider = new AbstractSliderButton(
                 0, 0,
                 150, 20,
                 getSliderMessage(),
@@ -47,12 +53,12 @@ public abstract class OptionsScreenMixin extends Screen {
             }
         };
 
-        adder.add(slider, 2, gridWidget.copyPositioner().marginTop(4).alignHorizontalCenter());
+        layout.addToFooter(slider);
     }
 
     @Unique
-    private Text getSliderMessage() {
-        return Text.literal("Camera Distance: " + String.format("%.1f", F5RangerClient.config.cameraDistance));
+    private Component getSliderMessage() {
+        return Component.literal("Camera Distance: " + String.format("%.1f", F5RangerClient.config.cameraDistance));
     }
 
     @Unique

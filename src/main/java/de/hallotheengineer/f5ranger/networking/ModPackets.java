@@ -1,20 +1,25 @@
 package de.hallotheengineer.f5ranger.networking;
 
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
 
-import static de.hallotheengineer.f5ranger.F5RangerClient.MOD_ID;
+import de.hallotheengineer.f5ranger.F5RangerClient;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
 
 public class ModPackets {
-    public record NoClipAllowPayload() implements CustomPayload {
-        public static final Id<NoClipAllowPayload> ID = new Id<>(Identifier.of(MOD_ID, "allow_noclip"));
-        public static final PacketCodec<PacketByteBuf, NoClipAllowPayload> CODEC = PacketCodec.unit(new NoClipAllowPayload());
+    public record NoClipAllowPayload() implements CustomPacketPayload {
+        public static final Type<NoClipAllowPayload> TYPE = new Type<>(
+                Identifier.fromNamespaceAndPath(F5RangerClient.MOD_ID, "allow_noclip")
+        );
+
+        public static final StreamCodec<FriendlyByteBuf, NoClipAllowPayload> CODEC =
+                StreamCodec.unit(new NoClipAllowPayload());
 
         @Override
-        public Id<? extends CustomPayload> getId() {
-            return ID;
+        public @NonNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
         }
     }
 }

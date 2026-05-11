@@ -13,8 +13,8 @@ public class F5RangerServer implements DedicatedServerModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("[F5Ranger]");
     @Override
     public void onInitializeServer() {
-        PayloadTypeRegistry.playS2C().register(
-                ModPackets.NoClipAllowPayload.ID,
+        PayloadTypeRegistry.clientboundConfiguration().register(
+                ModPackets.NoClipAllowPayload.TYPE,
                 ModPackets.NoClipAllowPayload.CODEC
         );
 

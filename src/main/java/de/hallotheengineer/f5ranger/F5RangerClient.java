@@ -63,6 +63,9 @@ public class F5RangerClient implements ClientModInitializer {
         );
     }
     public static boolean canNoClip() {
-        return config.noClip && (Minecraft.getInstance().isSingleplayer() || serverAllowsNoClip);
+        return config.noClip && (
+                (Minecraft.getInstance().getSingleplayerServer() != null && Minecraft.getInstance().getSingleplayerServer().isSingleplayer())
+                        || serverAllowsNoClip
+        );
     }
 }

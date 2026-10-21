@@ -14,7 +14,6 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 public class F5RangerClient implements ClientModInitializer {
     public static ModConfig config;
@@ -30,8 +29,8 @@ public class F5RangerClient implements ClientModInitializer {
     public void onInitializeClient() {
         modifierKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.f5ranger.modifier",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_LEFT_ALT,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.MOD_ALT,
                 keyCategory
         ));
 

@@ -30,7 +30,7 @@ public class F5RangerClient implements ClientModInitializer {
         modifierKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.f5ranger.modifier",
                 InputConstants.Type.KEYBOARD,
-                InputConstants.MOD_ALT,
+                InputConstants.KEY_LALT,
                 keyCategory
         ));
 

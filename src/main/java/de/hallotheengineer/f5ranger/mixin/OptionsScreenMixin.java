@@ -50,6 +50,7 @@ public abstract class OptionsScreenMixin extends Screen {
                 float min = F5RangerClient.config.minDistance;
                 float max = F5RangerClient.config.maxDistance;
                 F5RangerClient.config.cameraDistance = min + (float) (this.value * (max - min));
+                F5RangerClient.resetTemporaryDistance();
             }
         };
 

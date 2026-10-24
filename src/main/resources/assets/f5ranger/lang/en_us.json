@@ -28,6 +28,9 @@
   "text.autoconfig.f5ranger.option.disableSecondPerson": "Vanilla Second Person",
   "text.autoconfig.f5ranger.option.disableSecondPerson.@Tooltip": "If enabled, the custom distance logic will NOT apply to the front-facing (Second Person) view.",
 
+  "text.autoconfig.f5ranger.option.autoReset": "Auto Reset on Exit",
+  "text.autoconfig.f5ranger.option.autoReset.@Tooltip": "If enabled, scrolling changes a temporary distance that resets to the configured camera distance when you return to first-person view.",
+
   "text.autoconfig.f5ranger.option.showUISlider": "Show Distance Slider",
   "text.autoconfig.f5ranger.option.showUISlider.@Tooltip": "If enabled, a slider to set the camera distance is added to the vanilla settings screen."
 }

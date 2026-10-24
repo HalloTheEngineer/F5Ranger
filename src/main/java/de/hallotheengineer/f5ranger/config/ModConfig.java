@@ -31,5 +31,8 @@ public class ModConfig implements ConfigData {
     public boolean disableSecondPerson = false;
 
     @ConfigEntry.Gui.Tooltip
+    public boolean autoReset = false;
+
+    @ConfigEntry.Gui.Tooltip
     public boolean showUISlider = true;
 }

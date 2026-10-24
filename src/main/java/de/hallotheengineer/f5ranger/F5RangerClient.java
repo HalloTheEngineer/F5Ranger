@@ -21,6 +21,8 @@ public class F5RangerClient implements ClientModInitializer {
 
     private static final float DEFAULT_VANILLA_DISTANCE = 4.0f;
 
+    private static Float temporaryDistance = null;
+
     public static KeyMapping modifierKey;
     public static KeyMapping.Category keyCategory = KeyMapping.Category.register(Identifier.parse(MOD_ID));
     public static boolean serverAllowsNoClip = false;
@@ -46,8 +48,21 @@ public class F5RangerClient implements ClientModInitializer {
                 context.client().execute(() -> serverAllowsNoClip = true));
     }
 
+    public static float getEffectiveDistance() {
+        if (!config.autoReset) {
+            temporaryDistance = null;
+            return config.cameraDistance;
+        }
+
+        return temporaryDistance != null ? temporaryDistance : config.cameraDistance;
+    }
+
+    public static void resetTemporaryDistance() {
+        temporaryDistance = null;
+    }
+
     public static void adjustDistance(double verticalAmount) {
-        float currentDist = config.cameraDistance;
+        float currentDist = getEffectiveDistance();
 
         // Formula: base_step * (current_distance / 4.0)
         // Causes the cam distance to change exponentially
@@ -55,11 +70,17 @@ public class F5RangerClient implements ClientModInitializer {
 
         float delta = (float) (verticalAmount * config.scrollStep * speedMultiplier);
 
-        config.cameraDistance = Math.clamp(
-                config.cameraDistance - delta,
+        float newDistance = Math.clamp(
+                currentDist - delta,
                 config.minDistance,
                 config.maxDistance
         );
+
+        if (config.autoReset) {
+            temporaryDistance = newDistance;
+        } else {
+            config.cameraDistance = newDistance;
+        }
     }
     public static boolean canNoClip() {
         return config.noClip && (

@@ -3,131 +3,18 @@ name: Build and Release F5Ranger
 on:
   push:
     branches:
-      - "main"
-      - "[0-9]+.[0-9]+*" # Matches version branches like 1.18.2, 1.19.4, 1.21.x
-  pull_request:
-    branches:
-      - "main"
+      - "1.17.1"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    name: Build Mod
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      version: ${{ steps.get_version.outputs.version }}
-      mod_name: ${{ steps.get_version.outputs.mod_name }}
-      exists: ${{ steps.check_release.outputs.exists }}
-    env:
-      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Extract Metadata
-        id: get_version
-        run: |
-          VERSION=$(grep "mod_version" gradle.properties | cut -d'=' -f2 | xargs)
-          NAME=$(jq -r '.name' src/main/resources/fabric.mod.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "mod_name=$NAME" >> $GITHUB_OUTPUT
-          echo "Detected $NAME version: $VERSION"
-
-      - name: Check if Release Already Exists
-        id: check_release
-        run: |
-          if git rev-parse "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
-            echo "Version v${{ steps.get_version.outputs.version }} already released. Skipping release job."
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build with Gradle
-        run: |
-          chmod +x ./gradlew
-          ./gradlew remapJar --no-daemon
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: f5ranger-${{ github.ref_name }}
-          path: build/libs/*.jar
-          if-no-files-found: error
-
   release:
-    name: Create GitHub Release
-    if: (github.ref == 'refs/heads/main' || contains(github.ref, '.')) && needs.build.outputs.exists == 'false'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: f5ranger-${{ github.ref_name }}
-          path: ./artifacts
-
-      - name: Publish Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.build.outputs.version }}
-          name: ${{ needs.build.outputs.mod_name }} ${{ needs.build.outputs.version }}
-          files: ./artifacts/*.jar
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-modrinth:
-    name: Publish to Modrinth
-    if: (github.ref == 'refs/heads/main' || contains(github.ref, '.')) && needs.build.outputs.exists == 'false'
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Generate Changelog
-        id: changelog
-        run: |
-          echo "CHANGELOG=$(git log -1 --pretty=%B | head -n 10)" >> $GITHUB_OUTPUT
-
-      - name: Run Modrinth Publish
-        run: |
-          chmod +x ./gradlew
-          ./gradlew modrinth --no-daemon -Pchangelog="${{ steps.changelog.outputs.CHANGELOG }}"
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+    uses: HalloTheEngineer/F5Ranger/.github/workflows/release.yml@main
+    with:
+      java-version: "21"
+      make-latest: false
+    secrets: inherit

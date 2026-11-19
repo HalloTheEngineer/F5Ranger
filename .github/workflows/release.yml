@@ -1,0 +1,178 @@
+name: Build and Release F5Ranger
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        required: true
+        type: string
+      make-latest:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      MODRINTH_TOKEN:
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Mod
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Extract and Validate Metadata
+        id: meta
+        shell: bash
+        run: |
+          VERSION=$(grep '^mod_version=' gradle.properties | cut -d= -f2 | xargs)
+          MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2 | xargs)
+          SUFFIX=${VERSION#*+}
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "minecraft=$MC" >> "$GITHUB_OUTPUT"
+
+          if [ "$SUFFIX" = "$VERSION" ] || [ "$SUFFIX" != "$MC" ]; then
+            echo "::error::mod_version ($VERSION) must end with +$MC"
+            exit 1
+          fi
+
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF_TYPE" = "branch" ] && [ "$GITHUB_REF_NAME" != "main" ]; then
+            case "$MC" in
+              "$GITHUB_REF_NAME"|"$GITHUB_REF_NAME".*) ;;
+              *)
+                echo "::error::minecraft_version $MC does not match branch $GITHUB_REF_NAME"
+                exit 1
+                ;;
+            esac
+          fi
+
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match mod_version $VERSION"
+            exit 1
+          fi
+
+          echo "Detected $VERSION for Minecraft $MC"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build --no-daemon
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: f5ranger-${{ github.ref_name }}
+          path: build/libs/f5ranger-${{ steps.meta.outputs.version }}.jar
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: f5ranger-${{ github.ref_name }}
+          path: ./artifacts
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          name: F5Ranger ${{ needs.build.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          make_latest: ${{ inputs.make-latest && 'true' || 'false' }}
+          draft: false
+          prerelease: false
+          files: ./artifacts/*.jar
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-modrinth:
+    name: Publish to Modrinth
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Publish to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          EXISTING=$(curl -fsS "https://api.modrinth.com/v2/project/f5-ranger/version" \
+            | jq -r --arg v "$VERSION" '.[] | select(.version_number == $v) | .id' | head -n1)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Modrinth version $VERSION already exists ($EXISTING); skipping publish."
+            exit 0
+          fi
+
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*' 'HEAD^' 2>/dev/null || true)
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:'- %s' "${PREVIOUS_TAG}..HEAD")
+          else
+            CHANGELOG=$(git log --pretty=format:'- %s' HEAD)
+          fi
+
+          chmod +x ./gradlew
+          ./gradlew modrinth --no-daemon -Pchangelog="$CHANGELOG"

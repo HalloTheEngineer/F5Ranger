@@ -160,7 +160,7 @@ jobs:
         run: |
           VERSION="${{ needs.build.outputs.version }}"
           EXISTING=$(curl -fsS "https://api.modrinth.com/v2/project/f5-ranger/version" \
-            | jq -r --arg v "$VERSION" '.[] | select(.version_number == $v) | .id' | head -n1)
+            | jq -r --arg v "$VERSION" '[.[] | select(.version_number == $v)][0].id // empty')
 
           if [ -n "$EXISTING" ]; then
             echo "Modrinth version $VERSION already exists ($EXISTING); skipping publish."

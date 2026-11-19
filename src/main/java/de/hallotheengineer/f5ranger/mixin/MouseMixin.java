@@ -14,6 +14,10 @@ public class MouseMixin {
     private void onScroll(long handle, double xoffset, double yoffset, CallbackInfo ci) {
         Minecraft client = Minecraft.getInstance();
 
+        if (client.gui.screen() != null || client.gui.overlay() != null || client.player == null) {
+            return;
+        }
+
         if (F5RangerClient.modifierKey != null && F5RangerClient.modifierKey.isDown()) {
             if (client.options.getCameraType().isFirstPerson()) {
                 return;

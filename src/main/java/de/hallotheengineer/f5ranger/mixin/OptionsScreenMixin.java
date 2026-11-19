@@ -1,15 +1,13 @@
 package de.hallotheengineer.f5ranger.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import de.hallotheengineer.f5ranger.F5RangerClient;
-import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import de.hallotheengineer.f5ranger.gui.DistanceSlider;
+import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.network.chat.Component;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -20,52 +18,16 @@ public abstract class OptionsScreenMixin extends Screen {
         super(title);
     }
 
-    @Shadow
-    @Final
-    private HeaderAndFooterLayout layout;
-
     @Inject(
             method = "init",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/layouts/HeaderAndFooterLayout;addToFooter(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;"
+                    target = "Lnet/minecraft/client/gui/layouts/HeaderAndFooterLayout;addToContents(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;"
             )
     )
-    private void addCameraSlider(CallbackInfo ci) {
+    private void addCameraSlider(CallbackInfo ci, @Local GridLayout.RowHelper helper) {
         if (!F5RangerClient.config.showUISlider) return;
 
-        AbstractSliderButton slider = new AbstractSliderButton(
-                0, 0,
-                150, 20,
-                getSliderMessage(),
-                getSliderValue()) {
-
-            @Override
-            protected void updateMessage() {
-                this.setMessage(getSliderMessage());
-            }
-
-            @Override
-            protected void applyValue() {
-                float min = F5RangerClient.config.minDistance;
-                float max = F5RangerClient.config.maxDistance;
-                F5RangerClient.config.cameraDistance = min + (float) (this.value * (max - min));
-                F5RangerClient.resetTemporaryDistance();
-            }
-        };
-
-        layout.addToFooter(slider);
-    }
-
-    @Unique
-    private Component getSliderMessage() {
-        return Component.literal("Camera Distance: " + String.format("%.1f", F5RangerClient.config.cameraDistance));
-    }
-
-    @Unique
-    private double getSliderValue() {
-        float min = F5RangerClient.config.minDistance;
-        float max = F5RangerClient.config.maxDistance;
-        return Math.clamp((F5RangerClient.config.cameraDistance - min) / (max - min), 0.0f, 1.0f);
+        helper.addChild(new DistanceSlider(0, 0, 150, 20), 2);
     }
 }
